@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Honey Chain — Verify your honey</title>
+<style>
+body{font-family:-apple-system,"Segoe UI",Roboto,sans-serif;background:#faf5ec;color:#241a0e;margin:0}
+.wrap{max-width:540px;margin:0 auto;padding:28px 16px}
+.brand{text-align:center;font-size:22px;font-weight:900;color:#78350f}
+.brand small{display:block;font-weight:400;font-size:12px;color:#8a7a63}
+.card{background:#fff;border:1px solid #eadfcc;border-radius:18px;padding:22px;margin-top:18px;box-shadow:0 8px 30px rgba(120,80,20,.12)}
+.banner{font-size:18px;font-weight:900;padding:14px;border-radius:12px;text-align:center;margin-bottom:14px}
+.ok{background:#dcfce7;color:#15803d}.warn{background:#fef3c7;color:#b45309}.err{background:#fee2e2;color:#b91c1c}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kv>div{background:#fdf6e7;border-radius:10px;padding:9px 11px}
+.kv span{display:block;font-size:10px;color:#8a7a63;font-weight:700;text-transform:uppercase}
+.kv b{font-size:15px}
+.wide{background:#fdf6e7;border-radius:10px;padding:9px 11px;margin-top:8px}
+.wide span{display:block;font-size:10px;color:#8a7a63;font-weight:700;text-transform:uppercase}
+code{background:#fdf1d8;padding:1px 5px;border-radius:6px;font-size:.8em;word-break:break-all}
+.tl{list-style:none;border-left:3px solid #eadfcc;margin:8px 0 0 8px;padding:0}
+.tl li{position:relative;padding:0 0 14px 16px}
+.tl li:before{content:"";position:absolute;left:-8px;top:4px;width:12px;height:12px;border-radius:50%;background:#f59e0b;border:3px solid #fff}
+.tl .t{float:right;font-size:11px;color:#8a7a63}
+.tl .d{font-size:13px;color:#5a4a33}
+.tl .tx{font-size:12px}
+.sub{margin:16px 0 6px;color:#78350f}
+.foot{text-align:center;color:#8a7a63;font-size:12px;margin-top:16px}
+button{background:#f59e0b;border:none;border-radius:10px;padding:11px 20px;font-weight:800;font-size:15px;cursor:pointer}
+button.ghost{background:#fff;border:2px solid #f59e0b;color:#b45309}
+input{padding:10px;border:1.5px solid #eadfcc;border-radius:10px;width:100%;font-size:15px;margin-bottom:10px}
+.spin{width:26px;height:26px;border:4px solid #eadfcc;border-top-color:#f59e0b;border-radius:50%;margin:14px auto;animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.small{font-size:12px}.muted{color:#8a7a63}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">🍯 HONEY CHAIN<small>from hive to your home — fully traceable</small></div>
+  <div class="card" id="box"></div>
+  <p class="foot">Powered by <b>Honey Chain</b> • IoT-monitored hives • AI hive insights • tamper-evident ledger</p>
+</div>
+<script>
+(function(){
+"use strict";
+var box=document.getElementById("box");
+
+function esc(s){
+  return String(s==null?"":s).replace(/[&<>"']/g,function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];
+  });
+}
+function when(iso){
+  if(!iso)return "—";
+  var d=new Date(iso);
+  return isNaN(d.getTime())?"—":d.toLocaleString("en-IN",{day:"2-digit",month:"short",year:"numeric"});
+}
+function kv(label,value){
+  return "<div><span>"+label+"</span><b>"+(value==null||value===""?"—":value)+"</b></div>";
+}
+
+/* find batch code from ?code=, #code, or /verify/CODE */
+function findCode(){
+  var q="";
+  try{ q=new URLSearchParams(location.search).get("code")||""; }catch(e){}
+  if(q)return q.trim();
+  var h=location.hash.replace(/^#\/?/,"");
+  if(h)return h.trim();
+  var m=location.pathname.match(/verify\/([^\/?#]+)/i);
+  if(m)return decodeURIComponent(m[1]).trim();
+  return "";
+}
+function clean(c){ return String(c||"").trim().toUpperCase().replace(/[^A-Z0-9_-]/g,""); }
+
+function showInput(prefill){
+  box.innerHTML='<div class="banner warn">Enter your jar code</div>'
+    +'<form onsubmit="return HC.submit(this)">'
+    +'<input id="hc-code" name="code" placeholder="e.g. HC001" value="'+esc(prefill||"")+'" autocomplete="off"/>'
+    +'<button type="submit" style="width:100%">Verify</button></form>';
+  var i=document.getElementById("hc-code");
+  if(i)i.focus();
+}
+function loading(code){
+  box.innerHTML='<div class="banner warn">⏳ Checking batch '+esc(code)+'…</div>'
+    +'<p class="small muted">Contacting <code>/api/verify/'+esc(code)+'</code></p><div class="spin"></div>';
+}
+function showError(msg,code){
+  box.innerHTML='<div class="banner err">⚠ Could not verify</div>'
+    +'<p class="small">'+msg+'</p>'
+    +'<div style="text-align:center;margin-top:12px">'
+    +(code?'<button onclick="HC.go(\''+esc(code)+'\')">Retry</button> ':'')
+    +'<button class="ghost" onclick="HC.showInput()">Enter another code</button></div>';
+}
+
+function go(rawCode){
+  var code=clean(rawCode);
+  if(!code){showInput();return;}
+  if(location.protocol==="file:"){
+    showError("You opened this file directly from disk. Open it through the server instead:<br><code>http://localhost:8000/verify/"+esc(code)+"</code>");
+    return;
+  }
+  loading(code);
+  try{history.replaceState(null,"","/verify/"+encodeURIComponent(code));}catch(e){}
+
+  var xhr=new XMLHttpRequest();
+  xhr.open("GET","/api/verify/"+encodeURIComponent(code),true);
+  xhr.timeout=8000;
+  xhr.onload=function(){handle(code,xhr);};
+  xhr.onerror=function(){
+    showError("Could not reach the server at <code>"+esc(location.host)+"</code>. "
+      +"Is Honey Chain running?<br>Start it with <code>python main.py --seed --simulate</code>",code);
+  };
+  xhr.ontimeout=function(){
+    showError("The server did not answer within 8 seconds. "
+      +"Check the terminal running the backend for errors.",code);
+  };
+  try{xhr.send();}catch(e){showError("Request failed: "+esc(e.message),code);}
+}
+
+function handle(code,xhr){
+  var body=xhr.responseText||"";
+  var data=null;
+  try{data=JSON.parse(body);}catch(e){}
+  if(xhr.status===200&&data){render(data);return;}
+  if(data&&data.detail){
+    showError("HTTP "+xhr.status+": "+esc(data.detail),code);return;
+  }
+  showError("Server replied with HTTP "+xhr.status+" but not JSON — the backend probably crashed. "
+    +"Check the uvicorn terminal.<br>Response was: <code>"+esc(body.slice(0,200))+"</code>",code);
+}
+
+function render(d){
+  var b=d.batch||{},bk=d.beekeeper||{},hv=d.hive||{},q=d.quality,html="";
+  html+=d.verified
+    ?'<div class="banner ok">✓ Batch Verified — Ledger Intact</div>'
+    :'<div class="banner warn">⏳ Details found — ledger confirmation pending</div>';
+  html+='<div class="kv">';
+  html+=kv("Batch ID",esc(b.code));
+  html+=kv("Beekeeper",esc(bk.farm)+" ("+esc(bk.code)+")");
+  html+=kv("Hive",esc(hv.code)+" — "+esc(hv.location));
+  html+=kv("Collection",when(b.collection_date));
+  html+=kv("Quantity",(b.qty!=null?esc(b.qty):"—")+" kg");
+  html+=kv("Quality",q?esc(q.status):"Awaiting test");
+  html+=kv("Grade",q?esc(q.grade):"—");
+  html+=kv("Owner",esc(b.owner));
+  html+=kv("Ledger",d.verified?"✓ Verified":"Pending");
+  html+=kv("Block",b.block_index!=null?"#"+esc(b.block_index):"—");
+  html+='</div><div class="wide"><span>Block hash</span><code>'+esc(b.block_hash||"—")+"</code></div>";
+  if(q){
+    html+='<p class="foot">Lab: '+esc(q.lab)+" • Moisture "+esc(q.moisture)+"% • Purity "+esc(q.purity)+"%</p>";
+  }
+  html+='<h3 class="sub">Journey of this honey</h3><ol class="tl">';
+  var steps=d.trace||[];
+  if(!steps.length)html+="<li>No journey events recorded yet.</li>";
+  for(var i=0;i<steps.length;i++){
+    var s=steps[i];
+    var who=[s.actor,s.location].filter(function(x){return x;}).join(" • ");
+    html+="<li><b>"+esc(s.title)+"</b><span class='t'>"+esc((s.when||"").slice(0,10))+"</span>"
+      +"<div class='d'>"+esc(who)+" "+esc(s.details||"")+"</div>"
+      +"<div class='tx'>"+(s.block?("⛓ ledger block #"+esc(s.block.index)):"⛓ pending")+"</div></li>";
+  }
+  html+="</ol><div style='text-align:center;margin-top:12px'>"
+    +"<button class='ghost' onclick='HC.showInput()'>Verify another jar</button></div>";
+  box.innerHTML=html;
+}
+
+window.HC={
+  go:go,
+  showInput:showInput,
+  submit:function(f){go(f.code.value);return false;}
+};
+
+var initial=findCode();
+if(initial){go(initial);}else{showInput();}
+})();
+</script>
+</body>
+</html>
