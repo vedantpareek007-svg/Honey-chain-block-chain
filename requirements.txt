@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+qrcode[pil]
+PyJWT
+requests
+# OPTIONAL — enables the IsolationForest anomaly model automatically if installed:
+# numpy
+# scikit-learn

@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Honey Chain — Dashboard</title>
+<style>
+:root{--amber:#f59e0b;--d:#78350f;--muted:#8a7a63;--bg:#faf5ec;--line:#eadfcc;--green:#15803d;--red:#b91c1c}
+*{box-sizing:border-box;margin:0}body{font-family:-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:#241a0e;font-size:15px}
+code{background:#fdf1d8;padding:1px 5px;border-radius:6px;font-size:.85em;word-break:break-all}
+.shell{display:flex;min-height:100vh}
+.side{width:210px;background:#2b1d0f;color:#f7ecd9;display:flex;flex-direction:column;position:fixed;inset:0 auto 0 0}
+.brand{padding:16px;border-bottom:1px solid #43301a;font-weight:900;font-size:17px}.brand small{display:block;font-weight:400;font-size:11px;color:#c9b48d}
+.nav{flex:1;padding:10px 8px;display:flex;flex-direction:column;gap:2px}
+.nav button{all:unset;cursor:pointer;padding:10px 12px;border-radius:10px;font-weight:600;font-size:14px;color:#e8d9bd}
+.nav button.on,.nav button:hover{background:var(--amber);color:#2b1d0f}
+.foot{padding:12px;border-top:1px solid #43301a;font-size:12px}.foot button{all:unset;cursor:pointer;color:#c9b48d;text-decoration:underline}
+.main{flex:1;margin-left:210px;padding:20px;max-width:1150px}
+h2{color:var(--d);margin-bottom:12px}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px;box-shadow:0 2px 8px rgba(120,80,20,.06)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px}
+.stat b{font-size:24px;color:#b45309;display:block}.stat span{font-size:12px;color:var(--muted);font-weight:600}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;color:var(--muted);font-size:11px;text-transform:uppercase;padding:6px;border-bottom:2px solid var(--line)}
+td{padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+.badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:800}
+.ok{background:#dcfce7;color:var(--green)}.warn{background:#fef3c7;color:#b45309}.crit{background:#fee2e2;color:var(--red)}.mute{background:#eee7da;color:var(--muted)}
+input,select{padding:9px;border:1.5px solid var(--line);border-radius:9px;font-size:14px;background:#fffdf7;width:100%}
+label{display:block;font-size:12px;font-weight:700;color:var(--d);margin:8px 0 3px}
+.btn{background:var(--amber);color:#2b1d0f;font-weight:800;border:none;border-radius:10px;padding:11px 16px;font-size:14px;cursor:pointer;margin-top:10px}
+.btn.ghost{background:#fff;border:2px solid var(--amber);color:#b45309}
+.btn.sm{padding:6px 10px;font-size:12px;margin:0}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.err{background:#fee2e2;color:var(--red);padding:10px;border-radius:10px;font-weight:600;margin-bottom:10px}
+.okbox{background:#dcfce7;color:var(--green);padding:10px;border-radius:10px;font-weight:600;margin-bottom:10px}
+.muted{color:var(--muted)}.small{font-size:12px}
+.hivegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.hv{background:#fff;border:1px solid var(--line);border-left:6px solid var(--green);border-radius:12px;padding:12px}
+.hv.warn{border-left-color:var(--amber)}.hv.crit{border-left-color:var(--red)}
+.hv .m{display:flex;gap:8px;margin:8px 0}
+.hv .m div{flex:1;background:#fdf6e7;border-radius:9px;padding:6px;text-align:center;font-size:15px;font-weight:800}
+.hv .m small{display:block;font-weight:600;font-size:10px;color:var(--muted)}
+.tl{list-style:none;border-left:3px solid var(--line);margin:8px 0 0 8px;padding:0}
+.tl li{position:relative;padding:0 0 14px 16px}
+.tl li:before{content:"";position:absolute;left:-8px;top:4px;width:12px;height:12px;border-radius:50%;background:var(--amber);border:3px solid #fff}
+.tl .t{float:right;font-size:11px;color:var(--muted)}
+.tl .tx{font-size:12px;color:#5a4a33}
+.qr{width:160px;height:160px;border:1px solid var(--line);border-radius:10px}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kv div{background:#fdf6e7;border-radius:9px;padding:8px 10px}
+.kv span{display:block;font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase}
+#login{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:50}
+#login .box{background:#fff;border:1px solid var(--line);border-radius:16px;padding:28px;width:340px;box-shadow:0 8px 30px rgba(120,80,20,.15)}
+#login h1{font-size:22px;color:var(--d);text-align:center;margin-bottom:4px}
+#login p{text-align:center;color:var(--muted);font-size:12px;margin-bottom:14px}
+.hide{display:none!important}
+.alert-row{border-left:5px solid var(--amber);background:#fdf6e7;border-radius:10px;padding:8px 12px;margin-bottom:8px}
+.alert-row.crit{border-left-color:var(--red)}
+@media(max-width:820px){.side{position:static;width:100%;flex-direction:column}.shell{flex-direction:column}.main{margin-left:0}.g2,.kv{grid-template-columns:1fr}.nav{flex-direction:row;overflow-x:auto}}
+</style>
+</head>
+<body>
+<div id="login" class="hide">
+  <form class="box" onsubmit="doLogin(event)">
+    <h1>🍯 HONEY CHAIN</h1><p>Blockchain honey traceability — prototype</p>
+    <label>Email</label><input id="lemail" value="admin@honeychain.in"/>
+    <label>Password</label><input id="lpass" type="password" value="demo1234"/>
+    <div id="lerr" class="err hide"></div>
+    <button class="btn" style="width:100%">Enter Demo Mode</button>
+  </form>
+</div>
+
+<div class="shell">
+  <div class="side">
+    <div class="brand">🍯 HONEY CHAIN<small>hive → consumer</small></div>
+    <div class="nav" id="nav"></div>
+    <div class="foot"><div id="who" class="hide" style="margin-bottom:6px"></div>
+      <button onclick="logout()" id="lbtn" class="hide">log out</button></div>
+  </div>
+  <div class="main">
+    <section id="tab-dash"></section>
+    <section id="tab-hives" class="hide"></section>
+    <section id="tab-batches" class="hide"></section>
+    <section id="tab-ledger" class="hide"></section>
+    <section id="tab-ai" class="hide"></section>
+    <section id="tab-about" class="hide"></section>
+  </div>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+let TOKEN=localStorage.hc_token||"";
+let TABS=[["dash","📊 Dashboard"],["hives","📡 IoT Hives"],["batches","🍯 Batches"],
+          ["ledger","⛓️ Ledger"],["ai","🤖 AI Insights"],["about","ℹ️ About"]];
+let poll=null;
+
+async function api(p,opts={}){
+  opts.headers={...(opts.headers||{}),Authorization:TOKEN?"Bearer "+TOKEN:""};
+  if(opts.body&&typeof opts.body!=="string"){opts.headers["Content-Type"]="application/json";opts.body=JSON.stringify(opts.body)}
+  const r=await fetch("/api"+p,opts);
+  if(r.status===401){showLogin();throw new Error("Please log in.")}
+  if(!r.ok){let m;try{m=(await r.json()).detail}catch{} throw new Error(m||("HTTP "+r.status))}
+  return r.json();
+}
+const esc=s=>String(s??"").replace(/[<>&]/g,c=>({"<":"&lt;","&gt":"&gt;","&":"&amp;"}[c]));
+const badge=s=>`<span class="badge ${ {NORMAL:"ok",APPROVED:"ok",CONFIRMED:"ok",WARNING:"warn",PENDING:"warn",PENDING_SYNC:"warn",CRITICAL:"crit",REJECTED:"crit",NO_DATA:"mute"}[s]||"mute"}">${esc(s)}</span>`;
+const when=iso=>iso?new Date(iso).toLocaleString("en-IN",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}):"—";
+
+/* ------- tiny SVG charts (offline, no CDN) ------- */
+function bars(data,color="#f59e0b",h=180){
+  if(!data.length)return `<p class="muted small">No data yet.</p>`;
+  const w=520,mx=Math.max(...data.map(d=>d.value),1),bw=w/data.length;
+  let s=`<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}">`;
+  data.forEach((d,i)=>{const bh=(d.value/mx)*(h-42);
+    s+=`<rect x="${i*bw+bw*.22}" y="${h-26-bh}" width="${bw*.56}" height="${bh}" fill="${color}" rx="4"/>`
+      +`<text x="${i*bw+bw/2}" y="${h-31-bh}" font-size="11" text-anchor="middle" fill="#444">${d.value}</text>`
+      +`<text x="${i*bw+bw/2}" y="${h-9}" font-size="10" text-anchor="middle" fill="#777">${esc(d.label)}</text>`});
+  return s+"</svg>";
+}
+function lines(series,h=190){
+  const all=series.flatMap(x=>x.data.map(p=>p.v));
+  if(!all.length)return `<p class="muted small">No data yet.</p>`;
+  const w=520,pad=30;let mn=Math.min(...all),mx=Math.max(...all);if(mx===mn){mx++;mn--}
+  const n=Math.max(...series.map(s=>s.data.length));
+  const X=i=>pad+(n>1?i/(n-1):0)*(w-pad*1.3), Y=v=>h-pad-((v-mn)/(mx-mn))*(h-pad*2);
+  let s=`<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}">`
+    +`<text x="2" y="${pad-6}" font-size="10" fill="#999">${mx}</text>`
+    +`<text x="2" y="${h-pad+4}" font-size="10" fill="#999">${mn}</text>`;
+  series.forEach(sr=>{s+=`<polyline fill="none" stroke="${sr.c}" stroke-width="2.5" points="${
+    sr.data.map((p,i)=>`${X(i)},${Y(p.v)}`).join(" ")}"/>`});
+  s+=`<text x="${w-90}" y="14" font-size="11" fill="${series[0].c}">■ ${series[0].n}</text>`;
+  if(series[1])s+=`<text x="${w-90}" y="30" font-size="11" fill="${series[1].c}">■ ${series[1].n}</text>`;
+  return s+"</svg>";
+}
+function timeline(steps){
+  if(!steps||!steps.length)return `<p class="muted small">No events yet.</p>`;
+  return `<ol class="tl">`+steps.map(s=>`<li>
+    <b>${esc(s.title)}</b><span class="t">${esc(s.when||"")}</span>
+    <div class="muted small">${esc([s.actor,s.location].filter(Boolean).join(" • "))} ${esc(s.details||"")}</div>
+    <div class="tx">${s.block?`⛓ ledger block #${s.block.index} <code>${s.block.hash.slice(0,16)}…</code>`
+                             :`⛓ <span class="warn badge">pending sync</span>`}</div></li>`).join("")+"</ol>";
+}
+
+/* ------- auth ------- */
+function showLogin(){$("#login").classList.remove("hide");$("#who").classList.add("hide");$("#lbtn").classList.add("hide")}
+async function doLogin(e){
+  e.preventDefault();$("#lerr").classList.add("hide");
+  try{const r=await api("/login",{method:"POST",body:{email:$("#lemail").value,password:$("#lpass").value}});
+    TOKEN=r.token;localStorage.hc_token=TOKEN;$("#login").classList.add("hide");
+    $("#who").classList.remove("hide");$("#lbtn").classList.remove("hide");
+    $("#who").textContent=`👤 ${r.user.name} (${r.user.role})`;boot();
+  }catch(ex){$("#lerr").textContent="⚠ "+ex.message;$("#lerr").classList.remove("hide")}
+}
+function logout(){TOKEN="";localStorage.removeItem("hc_token");showLogin()}
+
+/* ------- navigation ------- */
+function nav(t){
+  clearInterval(poll);poll=null;
+  TABS.forEach(([k])=>$("#tab-"+k).classList.toggle("hide",k!==t));
+  document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("on",b.dataset.t===t));
+  ({dash:renderDash,hives:renderHives,batches:renderBatches,ledger:renderLedger,ai:renderAI,about:renderAbout})[t]();
+}
+
+/* ------- dashboard ------- */
+async function renderDash(){
+  const el=$("#tab-dash");el.innerHTML=`<div class="card">Loading…</div>`;
+  try{
+    const s=await api("/stats"),lv=await api("/ledger/verify"),al=await api("/ai/alerts");
+    el.innerHTML=`<h2>📊 Dashboard</h2>
+    <div class="stats">
+      <div class="stat"><b>${s.total_beekeepers}</b><span>🧑‍🌾 Beekeepers</span></div>
+      <div class="stat"><b>${s.total_hives}</b><span>🐝 Hives</span></div>
+      <div class="stat"><b>${s.total_batches}</b><span>🍯 Batches</span></div>
+      <div class="stat"><b>${s.verified_batches}</b><span>⛓️ On Ledger</span></div>
+      <div class="stat"><b>${s.pending_quality}</b><span>🔬 Pending Tests</span></div>
+      <div class="stat"><b>${s.active_alerts}</b><span>⚠️ Alerts</span></div>
+    </div>
+    <div class="g2">
+      <div class="card"><b>🍯 Production (kg, demo history)</b><div id="ch1"></div></div>
+      <div class="card"><b>🔬 Quality Grades</b><div id="ch2"></div></div>
+    </div>
+    <div class="card"><b>⛓️ Ledger Integrity</b>
+      ${lv.valid?`<div class="okbox">✓ All ${lv.count} blocks verified — hash chain intact.</div>`
+                :`<div class="err">⚠ Chain broken at block #${lv.broken_at}: ${esc(lv.detail)}</div>`}
+      <div class="row"><button class="btn sm ghost" onclick="ledgerCheck(this)">Re-verify now</button>
+      <button class="btn sm ghost" onclick="tamper(this)">Tamper demo</button>
+      <button class="btn sm ghost" onclick="resetAll(this)">Reset & reseed</button></div>
+    </div>
+    ${al.length?`<div class="card"><b>⚠️ Hive Health Alerts</b>${al.map(a=>`
+      <div class="alert-row ${a.status==="CRITICAL"?"crit":""}"><b>${esc(a.hive)}</b> ${badge(a.status)}
+      ${a.messages.map(m=>`<div class="small">• ${esc(m)}</div>`).join("")}
+      <div class="small">👉 ${esc(a.recommendation)}</div></div>`).join("")}</div>`:""}
+    <p class="muted small">Prototype: local tamper-evident ledger + simulated IoT + demo AI training data. Swap to a real EVM chain via the provided adapter for production.</p>`;
+    $("#ch1").innerHTML=bars(s.production);$("#ch2").innerHTML=bars(s.quality_dist,"#d97706");
+  }catch(ex){el.innerHTML=`<div class="err">⚠ ${esc(ex.message)}</div>`}
+}
+async function ledgerCheck(btn){const lv=await api("/ledger/verify");btn.closest(".card").outerHTML=
+  `<div class="card"><b>⛓️ Ledger Integrity</b>${lv.valid?`<div class="okbox">✓ All ${lv.count} blocks verified.</div>`
+   :`<div class="err">⚠ ${esc(lv.detail)}</div>`}<div class="row"><button class="btn sm ghost" onclick="ledgerCheck(this)">Re-verify</button>
+   <button class="btn sm ghost" onclick="tamper(this)">Tamper demo</button></div></div>`}
+async function tamper(btn){const r=await api("/ledger/tamper",{method:"POST"});
+  alert(`Block #${r.tampered_block} was modified.\nNow press "Re-verify" — the chain check will FAIL.`);renderDash()}
+async function resetAll(btn){await api("/ledger/reset",{method:"POST"});renderDash()}
+
+/* ------- hives / IoT ------- */
+async function renderHives(){
+  const el=$("#tab-hives");el.innerHTML=`<h2>📡 IoT Hive Monitoring</h2><div class="card">Loading…</div>`;
+  const draw=async()=>{
+    const hs=await api("/iot/summary");
+    el.innerHTML=`<h2>📡 IoT Hive Monitoring</h2>
+    <p class="muted small">Live DHT22 + load-cell data (built-in simulator). Refreshing every 5 s.</p>
+    <div class="hivegrid">${hs.map(h=>`
+      <div class="hv ${h.status==="CRITICAL"?"crit":h.status==="WARNING"?"warn":""}">
+        <div class="row" style="justify-content:space-between"><b>🏠 ${esc(h.code)}</b>${badge(h.status)}</div>
+        <div class="muted small">${esc(h.location||"")} • ${esc(h.beekeeper||"")}</div>
+        <div class="m"><div><small>Temp</small>${h.temperature??"—"}°C</div>
+        <div><small>Humidity</small>${h.humidity??"—"}%</div>
+        <div><small>Weight</small>${h.weight??"—"}kg</div></div>
+        <div class="muted small">📍 ${h.lat??""}, ${h.lon??""} • ${when(h.last_updated)}</div>
+      </div>`).join("")}</div>
+    <div class="card"><b>📈 History — <select id="hsel" style="width:auto">${hs.map(h=>`<option>${h.code}</option>`).join("")}</select></b>
+    <div id="chart"></div></div>`;
+    $("#hsel").onchange=drawChart;drawChart();
+  };
+  const drawChart=async()=>{
+    const code=$("#hsel").value,d=await api(`/iot/history/${code}?limit=48`);
+    $("#chart").innerHTML=lines([{n:"Temp °C",c:"#d97706",data:d.map(x=>({v:x.temp}))},
+                                 {n:"Humidity %",c:"#15803d",data:d.map(x=>({v:x.humidity}))}]);
+  };
+  await draw();poll=setInterval(draw,5000);
+}
+
+/* ------- batches ------- */
+let keepers=[],hives=[];
+async function renderBatches(){
+  const el=$("#tab-batches");el.innerHTML=`<div class="card">Loading…</div>`;
+  [keepers,hives]=await Promise.all([api("/beekeepers"),api("/hives")]);
+  const rows=await api("/batches");
+  el.innerHTML=`<h2>🍯 Honey Batches</h2>
+  <div class="g2">
+    <div class="card"><b>All Batches</b>
+      <table><tr><th>Code</th><th>Qty</th><th>Quality</th><th>Owner</th><th>Ledger</th><th></th></tr>
+      ${rows.map(r=>`<tr><td><b>${esc(r.code)}</b><br><span class="muted small">${esc(r.hive)} • ${when(r.collection_date)}</span></td>
+        <td>${r.qty}kg</td><td>${badge(r.quality_status)}</td><td class="small">${esc(r.owner)}</td>
+        <td>${r.block_hash?`<span class="badge ok">BLOCK #${r.block_index}</span><br><code>${esc(r.block_hash)}</code>`:badge("PENDING_SYNC")}</td>
+        <td><button class="btn sm" onclick="openBatch('${r.code}')">Open</button></td></tr>`).join("")}</table>
+    </div>
+    <div class="card"><b>➕ Create New Batch</b>
+      <label>Beekeeper</label><select id="cbk" onchange="fillHives()"><option value="">— choose —</option>
+        ${keepers.map(k=>`<option value="${k.id}">${k.code} — ${esc(k.farm)}</option>`).join("")}</select>
+      <label>Hive</label><select id="chv"><option>choose beekeeper first</option></select>
+      <label>Quantity (kg)</label><input id="cqty" type="number" min="0.5" step="0.5" value="25"/>
+      <div id="bmsg"></div>
+      <button id="createBtn" class="btn" style="width:100%">🍯 Create Batch → Write to Ledger</button>
+    </div>
+  </div>
+  <div id="bdetail"></div>`;
+  document.getElementById("createBtn").onclick=createBatch;
+}
+function fillHives(){
+  const bk=+$("#cbk").value;
+  $("#chv").innerHTML=hives.filter(h=>{const k=keepers.find(x=>x.id===bk);
+    return k&&h.beekeeper===k.farm}).map(h=>`<option value="${h.id}">${h.code} — ${esc(h.location)}</option>`).join("")
+    ||`<option>no hives for this keeper</option>`;
+}
+async function createBatch(){
+  $("#bmsg").innerHTML="";
+  try{
+    const r=await api("/batches",{method:"POST",body:{beekeeper_id:+$("#cbk").value,
+      hive_id:+$("#chv").value,quantity:+$("#cqty").value}});
+    $("#bmsg").innerHTML=`<div class="okbox">✓ ${esc(r.message)}<br><code>${esc(r.block_hash)}</code></div>`;
+    renderBatches();openBatch(r.code);
+  }catch(ex){$("#bmsg").innerHTML=`<div class="err">⚠ ${esc(ex.message)}</div>`}
+}
+async function openBatch(code){
+  const b=await api(`/batches/${code}`),q=await api(`/batches/${code}/qr`);
+  $("#bdetail").innerHTML=`<div class="card"><h2>🍯 Batch ${esc(b.code)}</h2>
+  <div class="g2">
+    <div>
+      <div class="kv">
+        <div><span>Beekeeper</span><b>${esc(b.beekeeper)} (${b.beekeeper_code})</b></div>
+        <div><span>Hive</span><b>${esc(b.hive)} — ${esc(b.hive_location)}</b></div>
+        <div><span>Collected</span><b>${when(b.collection_date)}</b></div>
+        <div><span>Quantity</span><b>${b.qty} kg</b></div>
+        <div><span>Quality</span>${badge(b.quality_status)}</div>
+        <div><span>Owner</span><b>${esc(b.owner)}</b></div>
+        <div><span>Ledger</span><b>block #${b.block_index??"—"}</b></div>
+        <div style="grid-column:1/-1"><span>Block hash</span><code>${esc(b.block_hash||"—")}</code></div>
+      </div>
+      <label>🔬 Add Quality Report (lab)</label>
+      <div class="row"><input id="qm" type="number" step="0.1" placeholder="moisture %"/>
+      <input id="qp" type="number" step="0.1" placeholder="purity %"/>
+      <select id="qs"><option>APPROVED</option><option>REJECTED</option><option>RETEST</option></select>
+      <button class="btn sm" onclick="addQuality('${b.code}')">Save</button></div>
+      <label>⚙️ Add Processing Step</label>
+      <div class="row"><select id="pt">${["Filtering","Processing","Packaging","Storage","Distribution"].map(s=>`<option>${s}</option>`).join("")}</select>
+      <input id="po" placeholder="operator"/><input id="pl" placeholder="location"/>
+      <button class="btn sm" onclick="addProc('${b.code}')">Add</button></div>
+      <label>🤝 Transfer Ownership</label>
+      <div class="row"><input id="to_" placeholder="e.g. Guwahati Distribution Hub"/>
+      <button class="btn sm" onclick="doTransfer('${b.code}')">Transfer</button></div>
+      <div id="bact"></div>
+    </div>
+    <div style="text-align:center">
+      <img class="qr" src="${q.data_url}" alt="QR"/>
+      <p class="muted small">Scans to:<br><code>${esc(q.url)}</code></p>
+      <a class="btn" href="/verify/${b.code}" target="_blank">Open consumer view →</a>
+    </div>
+  </div>
+  <b>🧭 Traceability (with ledger proof)</b>${timeline(b.trace)}</div>`;
+}
+async function addQuality(c){try{
+  await api(`/batches/${c}/quality`,{method:"POST",body:{moisture:+$("#qm").value,purity:+$("#qp").value,
+    grade:"A",status:$("#qs").value}});
+  $("#bact").innerHTML=`<div class="okbox">✓ Quality report written to ledger.</div>`;openBatch(c);
+}catch(ex){$("#bact").innerHTML=`<div class="err">⚠ ${esc(ex.message)}</div>`}}
+async function addProc(c){try{
+  await api(`/batches/${c}/processing`,{method:"POST",body:{ptype:$("#pt").value,
+    operator:$("#po").value||"staff",location:$("#pl").value||"facility"}});
+  $("#bact").innerHTML=`<div class="okbox">✓ Processing step written to ledger.</div>`;openBatch(c);
+}catch(ex){$("#bact").innerHTML=`<div class="err">⚠ ${esc(ex.message)}</div>`}}
+async function doTransfer(c){try{
+  const r=await api(`/batches/${c}/transfer`,{method:"POST",body:{new_owner:$("#to_").value}});
+  $("#bact").innerHTML=`<div class="okbox">✓ ${esc(r.from)} → ${esc(r.to)} (block #${r.block_index})</div>`;openBatch(c);
+}catch(ex){$("#bact").innerHTML=`<div class="err">⚠ ${esc(ex.message)}</div>`}}
+
+/* ------- ledger ------- */
+async function renderLedger(){
+  const el=$("#tab-ledger");el.innerHTML=`<div class="card">Loading…</div>`;
+  const blocks=await api("/ledger"),lv=await api("/ledger/verify");
+  el.innerHTML=`<h2>⛓️ Ledger Explorer</h2>
+  <div class="card">${lv.valid?`<div class="okbox">✓ Chain verified — ${lv.count} blocks intact.</div>`
+    :`<div class="err">⚠ ${esc(lv.detail)}</div>`}
+  <div class="row"><button class="btn sm ghost" onclick="renderLedger()">Refresh</button>
+  <button class="btn sm ghost" onclick="tamper(this)">Tamper demo</button>
+  <button class="btn sm ghost" onclick="resetAll(this)">Reset & reseed</button></div></div>
+  <div class="card"><table><tr><th>#</th><th>Event</th><th>Payload</th><th>Hash</th><th>Prev</th><th>Time</th></tr>
+  ${blocks.map(b=>`<tr><td><b>${b.index}</b></td><td>${esc(b.event)}</td>
+    <td class="small">${esc(JSON.stringify(b.payload).slice(0,80))}…</td>
+    <td><code>${esc(b.hash.slice(0,18))}…</code></td>
+    <td><code>${esc(b.prev_hash.slice(0,10))}…</code></td><td class="small">${when(b.ts)}</td></tr>`).join("")}</table></div>`;
+}
+
+/* ------- AI ------- */
+async function renderAI(){
+  const el=$("#tab-ai");el.innerHTML=`<div class="card">Loading…</div>`;
+  const hs=await api("/iot/summary");
+  el.innerHTML=`<h2>🤖 AI Insights</h2>
+  <div class="card"><b>Hive</b> <select id="asel" style="width:auto">${hs.map(h=>`<option>${h.code}</option>`).join("")}</select>
+  <div id="aiout"></div></div>
+  <div class="card"><b>🍯 Production Prediction</b><div id="apred"></div></div>`;
+  const draw=async()=>{
+    const c=$("#asel").value;
+    const [a,p]=await Promise.all([api(`/ai/hive/${c}/analysis`),api(`/ai/hive/${c}/prediction`)]);
+    $("#aiout").innerHTML=a.status==="NO_DATA"?`<p class="muted">No sensor data — enable the simulator.</p>`:`
+      <div class="row" style="margin:8px 0">${badge(a.status)}<span class="muted small">${a.readings_used} readings analyzed (thresholds + z-scores${a.anomalies.some(x=>x.source==="isolation_forest")?" + IsolationForest":""})</span></div>
+      <div class="m"><div><small class="muted">Temp</small><b>${a.temperature}°C</b></div>
+      <div><small class="muted">Humidity</small><b>${a.humidity}%</b></div>
+      <div><small class="muted">Weight</small><b>${a.weight}kg</b></div></div>
+      ${a.anomalies.length?`<b>Detected anomalies</b><ul>${a.anomalies.map(x=>`<li>${badge(x.severity)} ${esc(x.msg)} <span class="muted small">[${x.source}]</span></li>`).join("")}</ul>`:""}
+      <b>Recommendations</b><ul>${a.recommendations.map(r=>`<li>👉 ${esc(r)}</li>`).join("")}</ul>
+      <p class="muted small">${esc(a.note)}</p>`;
+    $("#apred").innerHTML=p.prediction_kg?`
+      <div style="font-size:32px;font-weight:900;color:#b45309">${p.prediction_kg} kg</div>
+      <p class="muted small">${esc(p.model)}${p.r2!=null?` • R²=${p.r2}`:""}<br>
+      inputs: ${p.inputs.temp}°C • ${p.inputs.humidity}% • ${p.inputs.weight}kg • season ${p.inputs.season}</p>
+      <p class="muted small">${esc(p.note)}</p>`:`<p class="muted small">${esc(p.note)}</p>`;
+  };
+  $("#asel").onchange=draw;draw();
+}
+
+/* ------- about ------- */
+function renderAbout(){
+  $("#tab-about").innerHTML=`<h2>ℹ️ About this prototype</h2>
+  <div class="card"><b>Real</b><ul>
+    <li>Tamper-evident hash-chained ledger (SHA-256, live tamper demo)</li>
+    <li>FastAPI REST backend + SQLite persistence + JWT login</li>
+    <li>Real QR codes (scan with a phone on the same Wi-Fi)</li>
+    <li>AI: thresholds + z-scores on actual stored readings (+IsolationForest if installed)</li></ul>
+  <b>Simulated</b><ul><li>IoT sensor values (built-in simulator / optional ESP32)</li>
+    <li>AI harvest-training data (synthetic demo rows)</li></ul>
+  <b>Upgrade path</b><ul><li>Real EVM chain: plug the Hardhat contract from the full-scale version into the ledger adapter</li>
+    <li>React frontend from the full-scale version uses the same API</li></ul></div>`;
+}
+
+/* ------- boot ------- */
+(async function boot(){
+  const navEl=$("#nav");
+  navEl.innerHTML=TABS.map(([k,l])=>`<button data-t="${k}" onclick="nav('${k}')">${l}</button>`).join("");
+  if(TOKEN){
+    try{const h=await api("/health");
+      $("#who").classList.remove("hide");$("#lbtn").classList.remove("hide");
+      $("#who").textContent=`⛓ ${h.ledger_blocks} blocks • ${h.db?"db ok":"db error"}`;
+      nav("dash");return;
+    }catch{TOKEN="";localStorage.removeItem("hc_token")}
+  }
+  showLogin();
+  document.querySelectorAll("#nav button").forEach(b=>b.classList.add("hide"));
+  $("#login").addEventListener("submit",()=>document.querySelectorAll("#nav button").forEach(b=>b.classList.remove("hide")),{once:true});
+})();
+</script>
+</body>
+</html>
